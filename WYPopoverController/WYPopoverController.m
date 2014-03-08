@@ -2484,15 +2484,32 @@ static CGPoint WYPointRelativeToOrientation(CGPoint origin, CGSize size, UIInter
 {
     NSDictionary *info = [notification userInfo];
     keyboardRect = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
-    [self positionPopover];
+    [self animateKeyboardAppearDisappear:notification];
     [containerView setNeedsDisplay];
 }
 
 - (void)keyboardWillHide:(NSNotification *)notification
 {
     keyboardRect = CGRectZero;
-    [self positionPopover];
+    [self animateKeyboardAppearDisappear:notification];
     [containerView setNeedsDisplay];
+}
+
+- (void)animateKeyboardAppearDisappear:(NSNotification *)notification
+{
+    NSDictionary *info = [notification userInfo];
+    double animDuration = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+    
+    NSDictionary *curveDic = @{@(UIViewAnimationCurveEaseInOut) : @(UIViewAnimationOptionCurveEaseInOut),
+                               @(UIViewAnimationCurveEaseIn) : @(UIViewAnimationOptionCurveEaseIn),
+                               @(UIViewAnimationCurveEaseOut) : @(UIViewAnimationOptionCurveEaseOut),
+                               @(UIViewAnimationCurveLinear) : @(UIViewAnimationOptionCurveLinear)};
+    UIViewAnimationOptions curveOpttions = [curveDic[[info objectForKey:UIKeyboardAnimationCurveUserInfoKey]] unsignedIntegerValue];
+    UIViewAnimationOptions animOptions = curveOpttions | UIViewAnimationOptionLayoutSubviews | UIViewAnimationOptionBeginFromCurrentState;
+    
+    [UIView animateWithDuration:animDuration delay:0.0 options:animOptions  animations:^{
+        [self positionPopover];
+    } completion:^(BOOL finished) { }];
 }
 
 #pragma mark Memory management
